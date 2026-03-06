@@ -1,0 +1,36 @@
+export interface User {
+  id: string;
+  email: string;
+  username?: string;
+  dateOfBirth?: string;
+  bio?: string;
+  gender?: string;
+  profileImageUrl?: string;
+  phoneNumber?: string;
+  profileComplete?: boolean;
+  createdAt: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: User;
+}
+
+export interface UpdateProfileData {
+  username: string;
+  dateOfBirth: string;
+  bio?: string;
+  gender: string;
+  profileImageUrl?: string;
+  phoneNumber: string;
+}
