@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Edit3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
+import { useToast } from '@/hooks/useToast';
 import { blogService } from '@/services/blogService';
 import BlogEditor from '@/components/BlogEditor';
 import Loading from '@/components/Loading';
@@ -19,6 +20,7 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { updateBlog } = useBlogs();
+  const { success: showSuccess } = useToast();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,7 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
 
   const handleSubmit = async (data: any) => {
     await updateBlog(id, data);
+    showSuccess('Blog updated successfully!');
     router.push('/dashboard');
   };
 
@@ -99,6 +102,7 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
               initialData={{
                 title: blog.title,
                 content: blog.content,
+                coverImage: blog.coverImage,
                 isPublished: blog.isPublished,
               }}
               onSubmit={handleSubmit}

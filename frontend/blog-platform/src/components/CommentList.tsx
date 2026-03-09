@@ -5,6 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send } from 'lucide-react';
 import { useComments } from '@/hooks/useComments';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import CommentItem from '@/components/CommentItem';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,6 +21,7 @@ export default function CommentList({ blogId }: CommentListProps) {
   const { isAuthenticated } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { success: showSuccess, error: showError } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +31,9 @@ export default function CommentList({ blogId }: CommentListProps) {
     try {
       await addComment({ content: newComment.trim() });
       setNewComment('');
+      showSuccess('Comment posted!');
     } catch {
-      // silent
+      showError('Failed to post comment');
     } finally {
       setSubmitting(false);
     }

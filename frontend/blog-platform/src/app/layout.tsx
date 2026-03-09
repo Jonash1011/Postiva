@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'BlogPlatform — Write, Share, Inspire',
+  title: 'Postiva — Write, Share, Inspire',
   description:
     'A modern blogging platform for creators. Share your ideas, connect with readers, and build your audience.',
 };

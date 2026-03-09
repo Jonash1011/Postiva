@@ -2,32 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Sparkles, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
+  const { error: showError } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      showError('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      showError('Password must be at least 6 characters');
       return;
     }
 
@@ -35,8 +36,8 @@ export default function RegisterPage() {
 
     try {
       await register({ email, password });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err, 'Registration failed'));
     } finally {
       setIsLoading(false);
     }
@@ -71,19 +72,6 @@ export default function RegisterPage() {
 
         <Card className="glass border-border/50">
           <CardContent className="p-6 sm:p-8">
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-xl text-sm mb-6"
-                >
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium">

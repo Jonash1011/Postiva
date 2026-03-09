@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,21 +14,32 @@ import {
   ExternalLink,
   LayoutDashboard,
   FileText,
+  Settings,
+  X,
+  Camera,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
+import { useToast } from '@/hooks/useToast';
+import { authService } from '@/services/authService';
 import Loading from '@/components/Loading';
 import EmptyState from '@/components/EmptyState';
 import DashboardStatsCard from '@/components/DashboardStatsCard';
+import Avatar from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { formatDate } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { formatDate, getErrorMessage } from '@/lib/utils';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, loading: authLoading, user } = useAuth();
+  const { isAuthenticated, loading: authLoading, user, refreshUser } = useAuth();
   const { blogs, loading, error, fetchMyBlogs, deleteBlog } = useBlogs();
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const { success: showSuccess, error: showError } = useToast();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -46,8 +57,9 @@ export default function DashboardPage() {
     if (confirm('Are you sure you want to delete this blog?')) {
       try {
         await deleteBlog(id);
-      } catch {
-        alert('Failed to delete blog');
+        showSuccess('Blog deleted successfully');
+      } catch (err: unknown) {
+        showError(getErrorMessage(err, 'Failed to delete blog'));
       }
     }
   };
@@ -68,22 +80,30 @@ export default function DashboardPage() {
         className="flex items-center justify-between mb-10"
       >
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <LayoutDashboard className="h-5 w-5 text-primary" />
-          </div>
+          <Avatar email={user?.email || ''} imageUrl={user?.profileImageUrl} size="lg" />
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Welcome back, {user?.email}
+              Welcome back, {user?.username || user?.email}
             </p>
           </div>
         </div>
-        <Link href="/dashboard/create">
-          <Button variant="gradient" className="gap-2">
-            <PenSquare className="h-4 w-4" />
-            New Blog
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setShowEditProfile(true)}
+          >
+            <Settings className="h-4 w-4" />
+            Edit Profile
           </Button>
-        </Link>
+          <Link href="/dashboard/create">
+            <Button variant="gradient" className="gap-2">
+              <PenSquare className="h-4 w-4" />
+              New Blog
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       {/* Stats */}
@@ -117,13 +137,6 @@ export default function DashboardPage() {
           index={3}
         />
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-xl mb-6 text-sm">
-          {error}
-        </div>
-      )}
 
       {/* Blog List */}
       {blogs.length === 0 ? (
@@ -226,6 +239,224 @@ export default function DashboardPage() {
           </div>
         </Card>
       )}
+      {showEditProfile && user && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowEditProfile(false)}
+          onSaved={async () => {
+            await refreshUser();
+            setShowEditProfile(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditProfileModal({
+  user,
+  onClose,
+  onSaved,
+}: {
+  user: NonNullable<ReturnType<typeof import('@/hooks/useAuth').useAuth>['user']>;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [username, setUsername] = useState(user.username || '');
+  const [dateOfBirth, setDateOfBirth] = useState(
+    user.dateOfBirth ? user.dateOfBirth.split('T')[0] : ''
+  );
+  const [phoneNumber, setPhoneNumber] = useState(
+    user.phoneNumber ? user.phoneNumber.replace('+91', '') : ''
+  );
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
+    user.profileImageUrl || null
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { success: showSuccess, error: showError } = useToast();
+
+  const canChangeUsername = (() => {
+    if (!user.usernameChangedAt) return true;
+    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+    return Date.now() - new Date(user.usernameChangedAt).getTime() >= threeDaysMs;
+  })();
+
+  const usernameNextChangeDate = user.usernameChangedAt
+    ? new Date(new Date(user.usernameChangedAt).getTime() + 3 * 24 * 60 * 60 * 1000)
+    : null;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showError('Image must be less than 5MB');
+        return;
+      }
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onload = () => setProfileImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const data: Record<string, string> = {};
+
+      if (username !== user.username && username.trim()) {
+        data.username = username;
+      }
+      if (dateOfBirth && dateOfBirth !== (user.dateOfBirth?.split('T')[0] || '')) {
+        data.dateOfBirth = new Date(dateOfBirth).toISOString();
+      }
+      if (phoneNumber && '+91' + phoneNumber !== user.phoneNumber) {
+        data.phoneNumber = '+91' + phoneNumber;
+      }
+      if (profileImage) {
+        data.profileImageUrl = await authService.fileToBase64(profileImage);
+      }
+
+      if (Object.keys(data).length === 0) {
+        showError('No changes to save');
+        setSubmitting(false);
+        return;
+      }
+
+      await authService.editProfile(data);
+      showSuccess('Profile updated successfully!');
+      setTimeout(onSaved, 800);
+    } catch (err: unknown) {
+      showError(getErrorMessage(err, 'Failed to update profile'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative w-full max-w-md"
+      >
+        <Card className="glass border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold">Edit Profile</h2>
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <AnimatePresence />
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Profile Image */}
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="relative cursor-pointer group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Avatar
+                    email={user.email}
+                    imageUrl={profileImagePreview}
+                    size="lg"
+                    className="h-20 w-20 text-xl"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Change photo
+                </button>
+              </div>
+
+              {/* Username */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Username</label>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={!canChangeUsername}
+                  placeholder="username"
+                />
+                {!canChangeUsername && usernameNextChangeDate && (
+                  <p className="flex items-center gap-1 text-xs text-amber-500">
+                    <AlertCircle className="h-3 w-3" />
+                    Can change after {usernameNextChangeDate.toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+
+              {/* Date of Birth */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Phone Number</label>
+                <div className="flex gap-2">
+                  <span className="flex items-center px-3 bg-muted rounded-lg text-sm text-muted-foreground">
+                    +91
+                  </span>
+                  <Input
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setPhoneNumber(val);
+                    }}
+                    placeholder="9876543210"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+
+              {/* Submit */}
+              <Button
+                type="submit"
+                variant="gradient"
+                className="w-full gap-2"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

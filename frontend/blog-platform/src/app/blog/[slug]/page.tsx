@@ -65,6 +65,17 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
           {blog.title}
         </h1>
 
+        {/* Cover Image */}
+        {blog.coverImage && (
+          <div className="rounded-2xl overflow-hidden mb-8 border border-border">
+            <img
+              src={blog.coverImage}
+              alt={blog.title}
+              className="w-full max-h-[400px] object-cover"
+            />
+          </div>
+        )}
+
         {/* Author Bar */}
         <div className="flex items-center justify-between pb-8 mb-8 border-b border-border">
           <div className="flex items-center gap-3">

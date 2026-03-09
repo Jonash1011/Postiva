@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { likeService } from '@/services/likeService';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
 interface LikeButtonProps {
@@ -22,6 +23,7 @@ export default function LikeButton({
   const [likes, setLikes] = useState(initialLikes);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { error: showError } = useToast();
 
   const handleToggle = async () => {
     if (!isAuthenticated || loading) return;
@@ -42,6 +44,7 @@ export default function LikeButton({
       // Revert on error
       setLiked(wasLiked);
       setLikes((prev) => (wasLiked ? prev + 1 : prev - 1));
+      showError('Failed to update like');
     } finally {
       setLoading(false);
     }

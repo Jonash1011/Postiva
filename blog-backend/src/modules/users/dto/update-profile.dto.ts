@@ -1,6 +1,6 @@
 import {
   IsString,
-  IsOptional,
+  IsNotEmpty,
   IsDateString,
   IsIn,
   Matches,
@@ -20,18 +20,19 @@ export class UpdateProfileDto {
   @IsDateString()
   dateOfBirth!: string;
 
-  @IsOptional()
   @IsString()
+  @IsNotEmpty({ message: 'Bio is required' })
+  @MinLength(1)
   @MaxLength(300)
-  bio?: string;
+  bio!: string;
 
   @IsString()
   @IsIn(['male', 'female'], { message: 'Gender must be male or female' })
   gender!: string;
 
-  @IsOptional()
   @IsString()
-  profileImageUrl?: string;
+  @IsNotEmpty({ message: 'Profile image is required' })
+  profileImageUrl!: string; // base64 data URI or URL
 
   @IsString()
   @Matches(/^\+91[6-9]\d{9}$/, {

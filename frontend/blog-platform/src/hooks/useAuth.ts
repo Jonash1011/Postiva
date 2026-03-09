@@ -15,7 +15,7 @@ export function useAuth() {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
     setLoading(false);
-  }, []);
+  }, [router]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -42,14 +42,24 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
     router.push('/');
   };
 
   const getUser = (): User | null => {
     return authService.getCurrentUser();
+  };
+
+  const refreshUser = async () => {
+    try {
+      const freshUser = await authService.fetchProfile();
+      setUser(freshUser);
+      return freshUser;
+    } catch {
+      return null;
+    }
   };
 
   return {
@@ -59,6 +69,7 @@ export function useAuth() {
     register,
     logout,
     getUser,
+    refreshUser,
     isAuthenticated: !!user,
   };
 }

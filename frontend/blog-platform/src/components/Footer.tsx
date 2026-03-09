@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold">BlogPlatform</span>
+              <span className="text-xl font-bold">Postiva</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               A modern blogging platform for creators. Share your ideas, connect with readers,
@@ -61,7 +61,7 @@ export default function Footer() {
 
         <div className="flex items-center justify-between mt-12 pt-8 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} BlogPlatform. All rights reserved.
+            &copy; {new Date().getFullYear()} Postiva. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">

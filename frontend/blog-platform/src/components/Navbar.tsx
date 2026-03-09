@@ -24,40 +24,42 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full glass border-b border-border/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <motion.div
-              whileHover={{ rotate: 15 }}
-              className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20"
-            >
-              <Sparkles className="h-4 w-4 text-white" />
-            </motion.div>
-            <span className="text-lg font-bold tracking-tight hidden sm:inline">
-              Blog<span className="gradient-text">Platform</span>
-            </span>
-          </Link>
+          {/* Logo + Nav Links (Left Side) */}
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <motion.div
+                whileHover={{ rotate: 15 }}
+                className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20"
+              >
+                <Sparkles className="h-4 w-4 text-white" />
+              </motion.div>
+              <span className="text-lg font-bold tracking-tight hidden sm:inline">
+                Post<span className="gradient-text">iva</span>
+              </span>
+            </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const active = pathname === link.href;
-              return (
-                <Link key={link.href} href={link.href}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      'gap-2 text-muted-foreground',
-                      active && 'text-foreground bg-card'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {link.label}
-                  </Button>
-                </Link>
-              );
-            })}
-          </nav>
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const active = pathname === link.href;
+                return (
+                  <Link key={link.href} href={link.href}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        'gap-2 text-muted-foreground',
+                        active && 'text-foreground bg-card'
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {link.label}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
@@ -76,7 +78,7 @@ export default function Navbar() {
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="flex items-center gap-2 rounded-full p-0.5 hover:ring-2 hover:ring-primary/30 transition-all"
                   >
-                    <Avatar email={user?.email || ''} size="sm" />
+                    <Avatar email={user?.email || ''} imageUrl={user?.profileImageUrl} size="sm" />
                   </button>
 
                   <AnimatePresence>

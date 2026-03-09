@@ -54,7 +54,7 @@ const stats = [
 
 export default function Home() {
   const router = useRouter();
-  const { user, isAuthenticated, login, register } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, login, register } = useAuth();
 
   // If already authenticated, redirect to dashboard
   useEffect(() => {
@@ -114,6 +114,7 @@ export default function Home() {
   };
 
   // Don't render landing if authenticated (will redirect)
+  if (authLoading) return null;
   if (isAuthenticated) return null;
 
   return (
@@ -142,7 +143,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5"
             >
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="text-sm font-medium text-primary">Modern Blogging Platform</span>
+              <span className="text-sm font-medium text-primary">Welcome to Postiva</span>
             </motion.div>
 
             {/* Headline */}

@@ -12,17 +12,19 @@ import {
   Phone,
   ChevronRight,
   ChevronLeft,
-  SkipForward,
   Check,
   Sparkles,
   Loader2,
+  Camera,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { authService } from '@/services/authService';
 import { authUtils } from '@/lib/auth';
-import { cn, getInitials } from '@/lib/utils';
+import { cn, getInitials, getErrorMessage } from '@/lib/utils';
+import { useToast } from '@/hooks/useToast';
 
 const TOTAL_STEPS = 6;
 
@@ -60,7 +62,7 @@ export default function ProfileSetupPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const { error: showError, success: showSuccess } = useToast();
 
   // Form state
   const [username, setUsername] = useState('');
@@ -68,6 +70,8 @@ export default function ProfileSetupPage() {
   const [bio, setBio] = useState('');
   const [gender, setGender] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
   // User email for initials
   const [email, setEmail] = useState('');
@@ -92,22 +96,21 @@ export default function ProfileSetupPage() {
       case 1:
         return dateOfBirth !== '';
       case 2:
-        return true; // Bio is skippable
+        return bio.trim().length > 0;
       case 3:
         return gender !== '';
       case 4:
-        return true; // Profile pic uses default initials
+        return !!profileImage;
       case 5:
         return /^\+91[6-9]\d{9}$/.test('+91' + phoneNumber);
       default:
         return false;
     }
-  }, [step, username, dateOfBirth, gender, phoneNumber]);
+  }, [step, username, dateOfBirth, bio, gender, profileImage, phoneNumber]);
 
   const nextStep = () => {
     if (step < TOTAL_STEPS - 1) {
       setDirection(1);
-      setError('');
       setStep((s) => s + 1);
     }
   };
@@ -115,34 +118,32 @@ export default function ProfileSetupPage() {
   const prevStep = () => {
     if (step > 0) {
       setDirection(-1);
-      setError('');
       setStep((s) => s - 1);
     }
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    setError('');
     try {
+      let profileImageUrl = '';
+      if (profileImage) {
+        profileImageUrl = await authService.fileToBase64(profileImage);
+      }
+
       await authService.updateProfile({
         username,
         dateOfBirth: new Date(dateOfBirth).toISOString(),
-        bio: bio || undefined,
+        bio,
         gender,
+        profileImageUrl,
         phoneNumber: '+91' + phoneNumber,
       });
-      // Brief success animation then redirect
+      showSuccess('Profile setup complete!');
       setTimeout(() => {
         router.push('/');
       }, 1200);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null && 'message' in err
-            ? String((err as { message: unknown }).message)
-            : 'Something went wrong';
-      setError(message);
+      showError(getErrorMessage(err, 'Something went wrong'));
       setSubmitting(false);
     }
   };
@@ -208,14 +209,9 @@ export default function ProfileSetupPage() {
             />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{bio.length}/300 characters</span>
-              <button
-                type="button"
-                onClick={nextStep}
-                className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-medium"
-              >
-                <SkipForward className="h-3.5 w-3.5" />
-                Skip this step
-              </button>
+              {!bio.trim() && (
+                <span className="text-destructive">Bio is required</span>
+              )}
             </div>
           </div>
         );
@@ -312,17 +308,58 @@ export default function ProfileSetupPage() {
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              className="h-28 w-28 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-3xl font-bold text-white shadow-2xl shadow-primary/30"
+              className="relative group cursor-pointer"
+              onClick={() => document.getElementById('avatar-input')?.click()}
             >
-              {getInitials(email)}
+              {profileImagePreview ? (
+                <img
+                  src={profileImagePreview}
+                  alt="Profile"
+                  className="h-28 w-28 rounded-full object-cover shadow-2xl shadow-primary/30 border-2 border-primary/20"
+                />
+              ) : (
+                <div className="h-28 w-28 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-3xl font-bold text-white shadow-2xl shadow-primary/30">
+                  {getInitials(email)}
+                </div>
+              )}
+              <div className="absolute inset-0 h-28 w-28 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="h-6 w-6 text-white" />
+              </div>
             </motion.div>
+            <input
+              id="avatar-input"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (file.size > 5 * 1024 * 1024) {
+                    showError('Image must be less than 5 MB');
+                    return;
+                  }
+                  setProfileImage(file);
+                  setProfileImagePreview(URL.createObjectURL(file));
+                }
+              }}
+            />
             <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Your profile picture is generated from your email
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => document.getElementById('avatar-input')?.click()}
+                type="button"
+              >
+                <Upload className="h-4 w-4" />
+                {profileImage ? 'Change Photo' : 'Upload Photo'}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                JPEG, PNG, GIF or WebP. Max 5 MB.
               </p>
-              <p className="text-xs text-muted-foreground/70">
-                You can upload a custom picture later
-              </p>
+              {!profileImage && (
+                <p className="text-xs text-destructive">Profile photo is required</p>
+              )}
             </div>
           </div>
         );
@@ -450,17 +487,6 @@ export default function ProfileSetupPage() {
                 {renderStep()}
               </motion.div>
             </AnimatePresence>
-
-            {/* Error */}
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 text-sm text-destructive text-center"
-              >
-                {error}
-              </motion.p>
-            )}
 
             {/* Navigation buttons */}
             <div className="flex items-center justify-between mt-8 gap-4">

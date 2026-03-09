@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -20,8 +21,10 @@ export class CommentsController {
     return this.commentsService.findByBlog(blogId);
   }
 
+  // Rate limit comment creation: 10 per 60s to prevent spam
   @Post()
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   create(
     @Param('blogId') blogId: string,
     @CurrentUser('id') userId: string,

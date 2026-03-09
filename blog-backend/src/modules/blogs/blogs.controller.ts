@@ -7,7 +7,10 @@ import {
   Body,
   Param,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -16,6 +19,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('blogs')
 @UseGuards(JwtAuthGuard)
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 export class BlogsController {
   constructor(private readonly blogsService: BlogsService) {}
 
@@ -44,6 +48,7 @@ export class BlogsController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.blogsService.remove(id, userId);
   }

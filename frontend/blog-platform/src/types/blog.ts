@@ -6,6 +6,7 @@ export interface Blog {
   content: string;
   slug: string;
   summary?: string;
+  coverImage?: string;
   isPublished: boolean;
   userId: string;
   user: User;
@@ -27,12 +28,14 @@ export interface Like {
 export interface CreateBlogDto {
   title: string;
   content: string;
+  coverImage?: string;
   isPublished: boolean;
 }
 
 export interface UpdateBlogDto {
   title?: string;
   content?: string;
+  coverImage?: string;
   isPublished?: boolean;
 }
 

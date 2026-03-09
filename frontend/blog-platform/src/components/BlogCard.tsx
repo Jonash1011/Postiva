@@ -1,12 +1,13 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Clock } from 'lucide-react';
+import { Heart, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Avatar from '@/components/ui/avatar';
-import { formatDate, getReadingTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { Blog } from '@/types/blog';
 
 interface BlogCardProps {
@@ -15,7 +16,7 @@ interface BlogCardProps {
 }
 
 export default function BlogCard({ blog, index = 0 }: BlogCardProps) {
-  const readingTime = getReadingTime(blog.content);
+  const router = useRouter();
   const likeCount = blog._count?.likes ?? 0;
   const commentCount = blog._count?.comments ?? 0;
 
@@ -25,17 +26,43 @@ export default function BlogCard({ blog, index = 0 }: BlogCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
     >
-      <Link href={`/blog/${blog.slug}`}>
+      <div onClick={() => router.push(`/blog/${blog.slug}`)} role="link" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/blog/${blog.slug}`); }}>
         <Card className="group relative overflow-hidden hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer h-full">
           {/* Hover glow effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-          <div className="relative p-6 flex flex-col h-full">
+          <div className="relative flex flex-col h-full">
+            {/* Cover Image */}
+            {blog.coverImage && (
+              <div className="w-full h-44 overflow-hidden">
+                <img
+                  src={blog.coverImage}
+                  alt={blog.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+            )}
+
+            <div className="p-6 flex flex-col flex-1">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
-              <Avatar email={blog.user.email} size="sm" />
+              {/* Clickable avatar — navigates to user profile */}
+              <Link
+                href={`/user/${blog.user.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 hover:opacity-80 transition-opacity"
+              >
+                <Avatar email={blog.user.email} imageUrl={blog.user.profileImageUrl} size="sm" />
+              </Link>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{blog.user.email}</p>
+                {/* Clickable username — navigates to user profile */}
+                <Link
+                  href={`/user/${blog.user.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-sm font-medium text-foreground truncate block hover:text-primary transition-colors"
+                >
+                  {blog.user.username || blog.user.email}
+                </Link>
                 <p className="text-xs text-muted-foreground">{formatDate(blog.createdAt)}</p>
               </div>
               <Badge variant={blog.isPublished ? 'success' : 'outline'}>
@@ -64,14 +91,11 @@ export default function BlogCard({ blog, index = 0 }: BlogCardProps) {
                   {commentCount}
                 </span>
               </div>
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" />
-                {readingTime} min read
-              </span>
+            </div>
             </div>
           </div>
         </Card>
-      </Link>
+      </div>
     </motion.div>
   );
 }

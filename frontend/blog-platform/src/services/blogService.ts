@@ -41,4 +41,9 @@ export const blogService = {
   async getBlogBySlug(slug: string): Promise<Blog> {
     return api.get<Blog>(`/public/blogs/${slug}`);
   },
+
+  // Get user public profile + their published blogs
+  async getUserProfile(id: string): Promise<any> {
+    return api.get<any>(`/public/users/${id}`);
+  },
 };

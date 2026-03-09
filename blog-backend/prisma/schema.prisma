@@ -7,21 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
-  passwordHash    String
-  username        String?   @unique
-  dateOfBirth     DateTime?
-  bio             String?
-  gender          String?
-  profileImageUrl String?
-  phoneNumber     String?
-  profileComplete Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  blogs           Blog[]
-  likes           Like[]
-  comments        Comment[]
+  id                String         @id @default(uuid())
+  email             String         @unique
+  passwordHash      String
+  role              Role           @default(USER)
+  username          String?        @unique
+  usernameChangedAt DateTime?
+  dateOfBirth       DateTime?
+  bio               String?
+  gender            String?
+  profileImageUrl   String?
+  phoneNumber       String?
+  profileComplete   Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  blogs             Blog[]
+  likes             Like[]
+  comments          Comment[]
+  refreshTokens     RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Blog {
@@ -31,6 +51,7 @@ model Blog {
   slug        String    @unique
   content     String
   summary     String?
+  coverImage  String?
   isPublished Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -44,8 +65,8 @@ model Like {
   userId    String
   blogId    String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  blog      Blog     @relation(fields: [blogId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
 
   @@unique([userId, blogId])
 }
@@ -56,8 +77,8 @@ model Comment {
   userId    String
   content   String
   createdAt DateTime @default(now())
-  blog      Blog     @relation(fields: [blogId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([blogId])
   @@index([createdAt])

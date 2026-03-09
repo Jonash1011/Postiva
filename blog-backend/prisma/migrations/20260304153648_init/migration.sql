@@ -3,6 +3,14 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
+    "username" TEXT,
+    "usernameChangedAt" TIMESTAMP(3),
+    "dateOfBirth" TIMESTAMP(3),
+    "bio" TEXT,
+    "gender" TEXT,
+    "profileImageUrl" TEXT,
+    "phoneNumber" TEXT,
+    "profileComplete" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -46,6 +54,9 @@ CREATE TABLE "Comment" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Blog_slug_key" ON "Blog"("slug");

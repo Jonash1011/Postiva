@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, PenSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
+import { useToast } from '@/hooks/useToast';
 import BlogEditor from '@/components/BlogEditor';
 import Loading from '@/components/Loading';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ export default function CreateBlogPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { createBlog } = useBlogs();
+  const { success: showSuccess } = useToast();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -25,6 +27,7 @@ export default function CreateBlogPage() {
 
   const handleSubmit = async (data: any) => {
     await createBlog(data);
+    showSuccess('Blog published successfully!');
     router.push('/dashboard');
   };
 

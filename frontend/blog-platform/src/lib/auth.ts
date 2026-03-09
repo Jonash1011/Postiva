@@ -20,6 +20,25 @@ export const authUtils = {
     }
   },
 
+  setRefreshToken: (token: string): void => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('refresh_token', token);
+    }
+  },
+
+  getRefreshToken: (): string | null => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('refresh_token');
+    }
+    return null;
+  },
+
+  removeRefreshToken: (): void => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('refresh_token');
+    }
+  },
+
   setUser: (user: User): void => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('user', JSON.stringify(user));
@@ -46,6 +65,7 @@ export const authUtils = {
 
   clearAuth: (): void => {
     authUtils.removeToken();
+    authUtils.removeRefreshToken();
     authUtils.removeUser();
   },
 };
