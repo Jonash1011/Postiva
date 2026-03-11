@@ -19,7 +19,7 @@ export class CreateBlogDto {
 
   @IsString()
   @IsOptional()
-  @MaxLength(2000)
+  @MaxLength(15_000_000)
   coverImage?: string;
 
   @IsBoolean()

@@ -338,6 +338,13 @@ export default function Home() {
                       disabled={isLoading}
                       className="h-11"
                     />
+                    {authMode === 'login' && (
+                      <div className="flex justify-end">
+                        <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                          Forgot password?
+                        </Link>
+                      </div>
+                    )}
                   </div>
 
                   <AnimatePresence>

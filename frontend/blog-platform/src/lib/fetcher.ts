@@ -45,6 +45,13 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
+    // Don't intercept 401s from auth endpoints — let the page handle the error
+    const authPaths = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/verify-otp', '/auth/reset-password'];
+    const isAuthRequest = authPaths.some((p) => originalRequest.url?.includes(p));
+    if (isAuthRequest) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (typeof window === 'undefined') {
         return Promise.reject(error);

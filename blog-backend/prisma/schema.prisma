@@ -26,6 +26,8 @@ model User {
   phoneNumber       String?
   profileComplete   Boolean        @default(false)
   createdAt         DateTime       @default(now())
+  resetOtp          String?
+  otpExpiry         DateTime?
   blogs             Blog[]
   likes             Like[]
   comments          Comment[]
@@ -82,4 +84,16 @@ model Comment {
 
   @@index([blogId])
   @@index([createdAt])
+}
+
+model PasswordResetOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
 }

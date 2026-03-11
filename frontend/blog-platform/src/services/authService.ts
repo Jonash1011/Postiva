@@ -72,4 +72,16 @@ export const authService = {
       reader.readAsDataURL(file);
     });
   },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/forgot-password', { email });
+  },
+
+  async verifyOtp(email: string, otp: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/verify-otp', { email, otp });
+  },
+
+  async resetPassword(email: string, newPassword: string): Promise<{ message: string }> {
+    return api.post<{ message: string }>('/auth/reset-password', { email, newPassword });
+  },
 };

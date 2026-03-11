@@ -11,11 +11,24 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated on mount
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
-  }, [router]);
+    const initAuth = async () => {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+        // Validate session with backend — refresh profile to ensure token is still valid
+        try {
+          const freshUser = await authService.fetchProfile();
+          setUser(freshUser);
+        } catch {
+          // Token expired and refresh failed — clear stale session
+          await authService.logout();
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
+  }, []);
 
   const login = async (credentials: LoginCredentials) => {
     try {

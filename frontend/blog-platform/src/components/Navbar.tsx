@@ -68,7 +68,7 @@ export default function Navbar() {
                 <Link href="/dashboard/create" className="hidden sm:block">
                   <Button variant="gradient" size="sm" className="gap-2">
                     <PenSquare className="h-4 w-4" />
-                    Write
+                    New Blog
                   </Button>
                 </Link>
 
@@ -198,7 +198,7 @@ export default function Navbar() {
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <PenSquare className="h-4 w-4" />
-                    Write
+                    New Blog
                   </Link>
                   <button
                     onClick={() => { setMenuOpen(false); logout(); }}

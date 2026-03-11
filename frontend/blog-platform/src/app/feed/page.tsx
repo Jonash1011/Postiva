@@ -42,7 +42,7 @@ export default function FeedPage() {
         <Link href="/dashboard/create">
           <Button variant="gradient" size="sm" className="gap-2">
             <PenSquare className="h-4 w-4" />
-            Write
+            New Blog
           </Button>
         </Link>
       </motion.div>
