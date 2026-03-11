@@ -6,6 +6,38 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
+function normalizeOrigin(value: string): string {
+  return value.trim().replace(/\/+$/, '').toLowerCase();
+}
+
+function getAllowedOrigins(): Set<string> {
+  const configured = process.env.FRONTEND_URL || 'http://localhost:3000';
+  return new Set(
+    configured
+      .split(',')
+      .map((value) => normalizeOrigin(value))
+      .filter(Boolean),
+  );
+}
+
+function isAllowedOrigin(origin: string, allowedOrigins: Set<string>): boolean {
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  if (
+    /^http:\/\/localhost:\d+$/i.test(normalizedOrigin) ||
+    /^https:\/\/localhost:\d+$/i.test(normalizedOrigin)
+  ) {
+    return true;
+  }
+
+  // Allow the production domain and preview deployments for this Vercel project.
+  if (/^https:\/\/postiva-[a-z0-9-]+\.vercel\.app$/i.test(normalizedOrigin)) {
+    return true;
+  }
+
+  return allowedOrigins.has(normalizedOrigin);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     // Allow large bodies for base64 image payloads (~5MB image → ~7MB base64)
@@ -19,6 +51,8 @@ async function bootstrap() {
   // Global prefix so all routes are under /api
   app.setGlobalPrefix('api');
 
+  const allowedOrigins = getAllowedOrigins();
+
   // Enable CORS for frontend
   app.enableCors({
     origin: (
@@ -27,21 +61,23 @@ async function bootstrap() {
     ) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
-      // Allow any localhost port in development
-      if (origin.match(/^http:\/\/localhost:\d+$/)) {
+
+      if (isAllowedOrigin(origin, allowedOrigins)) {
         return callback(null, true);
       }
-      // Allow configured frontend URL(s)
-      // Supports comma-separated list in FRONTEND_URL (e.g. "https://a.com,https://www.a.com")
-      const allowedRaw = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const allowedOrigins = allowedRaw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error('Not allowed by CORS'));
+
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    optionsSuccessStatus: 204,
   });
 
   // Global validation pipe for DTOs
@@ -64,4 +100,7 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Server running on http://localhost:${port}/api`);
 }
-bootstrap();
+void bootstrap().catch((error) => {
+  console.error('Failed to bootstrap application', error);
+  process.exit(1);
+});
