@@ -66,7 +66,8 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      // Deny CORS without surfacing as a server error.
+      return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
