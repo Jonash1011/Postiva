@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { authService } from '@/services/authService';
 import { User, LoginCredentials, RegisterCredentials } from '@/types/user';
 
@@ -19,10 +20,14 @@ export function useAuth() {
         try {
           const freshUser = await authService.fetchProfile();
           setUser(freshUser);
-        } catch {
-          // Token expired and refresh failed — clear stale session
-          await authService.logout();
-          setUser(null);
+        } catch (err) {
+          // Only clear local session for real auth failures.
+          // Network/CORS/API misconfig in production should not nuke localStorage.
+          const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+          if (status === 401 || status === 403) {
+            await authService.logout();
+            setUser(null);
+          }
         }
       }
       setLoading(false);

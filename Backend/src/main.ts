@@ -27,11 +27,14 @@ async function bootstrap() {
       if (origin.match(/^http:\/\/localhost:\d+$/)) {
         return callback(null, true);
       }
-      // Allow configured frontend URL
-      const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
-      if (origin === allowedOrigin) {
-        return callback(null, true);
-      }
+      // Allow configured frontend URL(s)
+      // Supports comma-separated list in FRONTEND_URL (e.g. "https://a.com,https://www.a.com")
+      const allowedRaw = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const allowedOrigins = allowedRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
