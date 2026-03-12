@@ -79,7 +79,7 @@ export default function ProfileSetupPage() {
   useEffect(() => {
     const currentUser = authUtils.getUser();
     if (!currentUser) {
-      router.push('/login');
+      router.push('/');
       return;
     }
     if (currentUser.profileComplete) {

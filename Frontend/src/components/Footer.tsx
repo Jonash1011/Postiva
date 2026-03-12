@@ -102,12 +102,12 @@ export default function Footer() {
               ) : (
                 <>
                   <li>
-                    <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       Log in
                     </Link>
                   </li>
                   <li>
-                    <Link href="/register" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       Sign up
                     </Link>
                   </li>

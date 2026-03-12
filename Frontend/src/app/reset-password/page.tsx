@@ -46,7 +46,7 @@ function ResetPasswordContent() {
     try {
       await authService.resetPassword(email, newPassword);
       success('Password reset successfully! Please log in.');
-      router.push('/login');
+      router.push('/');
     } catch (err: unknown) {
       showError(getErrorMessage(err, 'Failed to reset password'));
     } finally {

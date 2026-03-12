@@ -27,7 +27,7 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push('/');
     }
   }, [isAuthenticated, authLoading, router]);
 

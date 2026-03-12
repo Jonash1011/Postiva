@@ -137,10 +137,10 @@ export default function Navbar() {
               </>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Link href="/login">
+                <Link href="/">
                   <Button variant="ghost" size="sm">Log in</Button>
                 </Link>
-                <Link href="/register">
+                <Link href="/">
                   <Button variant="gradient" size="sm">Get Started</Button>
                 </Link>
               </div>
@@ -210,10 +210,10 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="pt-2 space-y-2">
-                  <Link href="/login" onClick={() => setMenuOpen(false)}>
+                  <Link href="/" onClick={() => setMenuOpen(false)}>
                     <Button variant="outline" className="w-full">Log in</Button>
                   </Link>
-                  <Link href="/register" onClick={() => setMenuOpen(false)}>
+                  <Link href="/" onClick={() => setMenuOpen(false)}>
                     <Button variant="gradient" className="w-full">Get Started</Button>
                   </Link>
                 </div>

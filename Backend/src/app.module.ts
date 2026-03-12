@@ -31,7 +31,9 @@ function conditionalBullImports(): Array<DynamicModule | typeof JobsModule> {
       connection: {
         host: parsed.hostname || 'localhost',
         port: parseInt(parsed.port || '6379', 10),
-        ...(parsed.password ? { password: decodeURIComponent(parsed.password) } : {}),
+        ...(parsed.password
+          ? { password: decodeURIComponent(parsed.password) }
+          : {}),
         maxRetriesPerRequest: null,
       },
     }),

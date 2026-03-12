@@ -9,7 +9,7 @@ import { ToastProvider } from '@/components/ui/toaster';
 import { authUtils } from '@/lib/auth';
 
 // Pages where Navbar and Footer are hidden (landing / auth pages)
-const BARE_PAGES = ['/', '/login', '/register', '/profile-setup', '/forgot-password', '/verify-otp', '/reset-password'];
+const BARE_PAGES = ['/', '/profile-setup', '/forgot-password', '/verify-otp', '/reset-password'];
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

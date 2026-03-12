@@ -73,7 +73,7 @@ export default function CommentList({ blogId }: CommentListProps) {
       ) : (
         <div className="text-center py-4 rounded-xl bg-muted/20 border border-border/30">
           <p className="text-sm text-muted-foreground">
-            <Link href="/login" className="text-primary hover:underline font-medium">
+            <Link href="/" className="text-primary hover:underline font-medium">
               Log in
             </Link>{' '}
             to join the conversation
